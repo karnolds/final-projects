@@ -1,0 +1,65 @@
+---
+title: "Arnolds Project"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+The goal of this project was to use sequences that we have gotten by blasting our gene of interest, wcfR, against metagenomes in the literature. When we get blast hits with an e-value great then e^-90 we keep those sequences as potential wcfR genes. Since there are many kinds of wcfR from many different organisms we want to know which hits from this metagenome are most common in health or disease and then assing those that are most common or most changed between health and disease to known operons containing the wcfR gene homologs. This will allow us to then assing the operons to species and determine which of these wcfR producing bacteria, which we hypothesize are anti-inflammatory have the most relevance for human health. 
+
+First we need to get the local gene sequences (truncated here for learning purposes on my part) that are associted with metagenomes from idividuals with IBD before and after treatement. 
+
+```{r}
+read.csv("/Users/katiearnolds/Documents/wcfR_data.csv") -> wcfR_data
+wcfR_data
+```
+
+Then we want to isolate those who have been treated and thus are healthier to see which sequences are most abundant. 
+
+```{r}
+filter(wcfR_data, Treat == 1)-> wcfR_treat 
+as.data.frame(wcfR_treat)
+as.data.frame(wcfR_treat[colnames(as.data.frame(wcfR_treat))[3:ncol(as.data.frame(wcfR_treat))]])
+```
+Then I want to get the df to just have the sequences associated with the read counts.
+
+```{r}
+wcfR_treat2 <- as.data.frame(wcfR_treat)
+wcfR_treat2[colnames(wcfR_treat2)[3:ncol(wcfR_treat2)]]
+```
+Now I need the means of each sequence to see which are most abundant in this "healthier" cohort
+
+```{r}
+colMeans(wcfR_treat2[colnames(wcfR_treat2)[3:ncol(wcfR_treat2)]])
+```
+```{r}
+ wcfR_treat2_means = colMeans(wcfR_treat2[colnames(wcfR_treat2)[3:ncol(wcfR_treat2)]])
+ wcfR_treat2_means
+```
+Then I want to sort them to get the number one most abundant gene. 
+
+```{r}
+names(sort(wcfR_treat2_means, decreasing = T))
+names(sort(wcfR_treat2_means, decreasing = T))[1]
+```
+```{r}
+names(sort(wcfR_treat2_means, decreasing = T))[1]->GOI
+GOI
+```
+
+Once I have my gene of interest I want to blast it against my local database of know operons containing wcfR to see which operon this abundant sequence belongs to. (This step keeps crashing my computer, but we are working on it!)
+
+```{r}
+library(BiocInstaller)
+biocLite(c("GenomicFeatures", "AnnotationDbi"))
+library(annotate)
+blastSequences(GOI, blastn ,hitListSize = 10, filter = L, expect = -90, program ="blastn", timeout = 20, as= NULL)
+``
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
